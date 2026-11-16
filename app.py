@@ -19,11 +19,11 @@ excel_source = "SupplyChain_Interview_Project.xlsx"
 
 @st.cache_data
 def load_data(file):
+  # قراءة الأوراق مع تخطي الصفوف التوضيحية لضبط الهيدر الصحيح
   dash = pd.read_excel(file, sheet_name="Dashboard")
   items = pd.read_excel(file, sheet_name="Items", skiprows=2)
   analysis = pd.read_excel(file, sheet_name="Analysis", skiprows=2)
-  # تنظيف أسماء الأعمدة لتجنب أي أخطاء
-  analysis.columns = analysis.columns.str.strip()
+  analysis.columns = analysis.columns.str.strip()  # تنظيف مسافات الأعمدة
   suppliers = pd.read_excel(file, sheet_name="Suppliers", skiprows=2)
   suppliers.columns = suppliers.columns.str.strip()
   return dash, items, analysis, suppliers
@@ -47,7 +47,9 @@ try:
     st.subheader("📊 المؤشرات الرئيسية لأداء المخزون والصرف")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-      st.metric(label="إجمالي الصرف السنوي", value="250,043,180 EGP")
+      st.metric(
+          label="إجمالي الصرف السنوي", value="250,043,180 EGP", delta="آخر 12 شهر"
+      )
     with col2:
       st.metric(label="قيمة المخزون الحالي", value="55,443,560 EGP")
     with col3:
@@ -57,8 +59,9 @@ try:
 
     st.markdown("---")
     st.subheader("📋 ملخص حالة الأصناف في النظام")
-    # طباعة الأعمدة المتاحة تفاديا لأي خطأ
-    available_cols = [
+
+    # عرض الأعمدة الأساسية بشكل آمن
+    cols_to_show = [
         col
         for col in [
             "Item ID",
@@ -70,7 +73,10 @@ try:
         ]
         if col in analysis_df.columns
     ]
-    st.dataframe(analysis_df[available_cols], use_container_width=True)
+    if cols_to_show:
+      st.dataframe(analysis_df[cols_to_show], use_container_width=True)
+    else:
+      st.dataframe(analysis_df.head(), use_container_width=True)
 
   elif menu == "تحليل المخزون وإعادة الطلب (Analysis)":
     st.subheader("⚙️ جدول تحليل المخزون، نقطة إعادة الطلب (ROP) و EOQ")
@@ -78,6 +84,11 @@ try:
 
   elif menu == "المحاكي التفاعلي اللحظي (Interactive Simulator)":
     st.subheader("🎛️ محاكي تخطيط الاحتياجات ولحظي التغيير")
+    st.markdown(
+        "يمكنك تعديل المدخلات لاختبار تأثيرها الفوري على مخزون الأمان ونقطة إعادة"
+        " الطلب أمام لجنة التقييم:"
+    )
+
     col_s1, col_s2 = st.columns(2)
     with col_s1:
       avg_demand = st.number_input(
