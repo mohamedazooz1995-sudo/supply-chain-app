@@ -22,7 +22,10 @@ def load_data(file):
   dash = pd.read_excel(file, sheet_name="Dashboard")
   items = pd.read_excel(file, sheet_name="Items", skiprows=2)
   analysis = pd.read_excel(file, sheet_name="Analysis", skiprows=2)
+  # تنظيف أسماء الأعمدة لتجنب أي أخطاء
+  analysis.columns = analysis.columns.str.strip()
   suppliers = pd.read_excel(file, sheet_name="Suppliers", skiprows=2)
+  suppliers.columns = suppliers.columns.str.strip()
   return dash, items, analysis, suppliers
 
 
@@ -54,19 +57,20 @@ try:
 
     st.markdown("---")
     st.subheader("📋 ملخص حالة الأصناف في النظام")
-    st.dataframe(
-        analysis_df[
-            [
-                "Item ID",
-                "Item",
-                "ABC-XYZ",
-                "Status",
-                "Suggested order qty",
-                "Months of cover",
-            ]
-        ],
-        use_container_width=True,
-    )
+    # طباعة الأعمدة المتاحة تفاديا لأي خطأ
+    available_cols = [
+        col
+        for col in [
+            "Item ID",
+            "Item",
+            "ABC-XYZ",
+            "Status",
+            "Suggested order qty",
+            "Months of cover",
+        ]
+        if col in analysis_df.columns
+    ]
+    st.dataframe(analysis_df[available_cols], use_container_width=True)
 
   elif menu == "تحليل المخزون وإعادة الطلب (Analysis)":
     st.subheader("⚙️ جدول تحليل المخزون، نقطة إعادة الطلب (ROP) و EOQ")
