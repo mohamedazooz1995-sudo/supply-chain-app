@@ -24,7 +24,7 @@ ALT_W = stretch(st.altair_chart)
 DF_W = stretch(st.dataframe)
 
 AUTHOR = "Mohamed Ibrahiem Azooz"
-WORKBOOK = Path(__file__).parent / "SupplyChain_Interview_Project.xlsx"
+WORKBOOK = Path(__file__).parent / "SupplyChain_Project"
 
 st.set_page_config(
     page_title="Network Materials Supply Planning",
