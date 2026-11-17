@@ -1,5 +1,6 @@
 import copy
 import html
+import inspect
 from pathlib import Path
 
 import altair as alt
@@ -7,6 +8,20 @@ import pandas as pd
 import streamlit as st
 
 import engine
+
+
+def stretch(fn):
+    # Newer Streamlit versions replace use_container_width with width="stretch".
+    try:
+        if "use_container_width" in inspect.signature(fn).parameters:
+            return {"use_container_width": True}
+    except (TypeError, ValueError):
+        pass
+    return {"width": "stretch"}
+
+
+ALT_W = stretch(st.altair_chart)
+DF_W = stretch(st.dataframe)
 
 AUTHOR = "Mohamed Ibrahiem"
 WORKBOOK = Path(__file__).parent / "SupplyChain_Interview_Project.xlsx"
@@ -203,7 +218,7 @@ with tab_ov:
         )
         st.altair_chart(
             style_chart(alt.layer(bars, line).resolve_scale(y="independent").properties(height=330)),
-            use_container_width=True,
+            **ALT_W,
         )
     with right:
         section("Key findings")
@@ -295,7 +310,7 @@ with tab_inv:
             )
             .properties(height=330)
         )
-        st.altair_chart(style_chart(ch), use_container_width=True)
+        st.altair_chart(style_chart(ch), **ALT_W)
 
     section("Inventory policy by item")
     pol = pd.DataFrame({
@@ -305,7 +320,7 @@ with tab_inv:
         "Cover (months)": A.cover.round(1), "Status": A.status, "Suggested order": A.order_qty,
     })
     st.dataframe(
-        pol, use_container_width=True, hide_index=True,
+        pol, hide_index=True, **DF_W,
         column_config={
             "Forecast / month": st.column_config.NumberColumn(format="%d"),
             "Lead time (d)": st.column_config.NumberColumn(format="%d"),
@@ -374,7 +389,7 @@ with tab_fc:
         )
     )
     rule = alt.Chart(pd.DataFrame({"Month": [months[12]]})).mark_rule(color="#9AA5B1", strokeDash=[2, 3]).encode(x=alt.X("Month:N", sort=months))
-    st.altair_chart(style_chart(alt.layer(lines, rule).properties(height=340)), use_container_width=True)
+    st.altair_chart(style_chart(alt.layer(lines, rule).properties(height=340)), **ALT_W)
     st.markdown(
         f'<p class="note">The dotted vertical line marks the start of the 12-month back-test window ({months[12]}). '
         "MAPE is measured over that window only.</p>",
@@ -412,7 +427,7 @@ with tab_sup:
             tooltip=[alt.Tooltip("supplier:N", title="Supplier"), alt.Tooltip("spend_share:Q", title="Spend share", format=".0%")],
         )
         lim = alt.Chart(pd.DataFrame({"y": [params["conc"]]})).mark_rule(color="#B42318", strokeDash=[5, 3]).encode(y="y:Q")
-        st.altair_chart(style_chart(alt.layer(ch, lim).properties(height=260)), use_container_width=True)
+        st.altair_chart(style_chart(alt.layer(ch, lim).properties(height=260)), **ALT_W)
         st.markdown(f'<p class="note">Dashed line: concentration limit of {params["conc"]:.0%} of spend.</p>', unsafe_allow_html=True)
     with c2:
         section("Performance score")
@@ -422,7 +437,7 @@ with tab_sup:
             tooltip=[alt.Tooltip("supplier:N", title="Supplier"), alt.Tooltip("score:Q", title="Score", format=".1f")],
         )
         rules = alt.Chart(pd.DataFrame({"y": [params["tier_a"], params["tier_b"]]})).mark_rule(color="#5B6675", strokeDash=[5, 3]).encode(y="y:Q")
-        st.altair_chart(style_chart(alt.layer(ch, rules).properties(height=260)), use_container_width=True)
+        st.altair_chart(style_chart(alt.layer(ch, rules).properties(height=260)), **ALT_W)
         st.markdown(f'<p class="note">Dashed lines: Tier A from {params["tier_a"]}, Tier B from {params["tier_b"]}.</p>', unsafe_allow_html=True)
     st.markdown(
         f'<p class="note">Score weights: on-time delivery {params["w_ontime"]:.0%}, quality {params["w_quality"]:.0%}, '
@@ -494,7 +509,7 @@ with tab_sc:
             color=alt.Color("Case:N", scale=alt.Scale(domain=["Base", "Scenario"], range=["#B9C4D3", ACCENT]), legend=alt.Legend(title=None)),
             tooltip=[alt.Tooltip("Item:N"), alt.Tooltip("Case:N"), alt.Tooltip("Value:Q", format=",.2f", title="EGP m")],
         ).properties(height=300)
-        st.altair_chart(style_chart(ch), use_container_width=True)
+        st.altair_chart(style_chart(ch), **ALT_W)
     with cc2:
         section("Items whose status changes")
         chg = A[["id", "item", "status"]].merge(A2[["id", "status", "order_qty"]], on="id", suffixes=("_b", "_s"))
