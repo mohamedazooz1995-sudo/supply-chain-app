@@ -23,7 +23,7 @@ def stretch(fn):
 ALT_W = stretch(st.altair_chart)
 DF_W = stretch(st.dataframe)
 
-AUTHOR = "Mohamed Ibrahiem"
+AUTHOR = "Mohamed Ibrahiem Azooz"
 WORKBOOK = Path(__file__).parent / "SupplyChain_Interview_Project.xlsx"
 
 st.set_page_config(
